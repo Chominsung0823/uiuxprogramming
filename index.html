@@ -76,11 +76,16 @@
     <!-- 교정 훈련 소식 받기 -->
     <section id="subscribe" class="subscribe-card">
       <h2>교정 훈련 소식 받기</h2>
-      <form>
+      <form id="subscribe-form">
         <label for="email">이메일</label>
         <input type="email" id="email" name="email">
-        <button type="submit">훈련 소식 신청하기</button>
+        <button id="subscribeButton" type="submit">훈련 소식 신청하기</button>
       </form>
+      
+      <p id="subscribeMessage" aria-live="polite">
+        이메일을 입력한 뒤 신청해주세요.
+      </p>
+
     </section>
   </main>
   <!-- 메인 콘텐츠 끝 -->
@@ -89,6 +94,8 @@
   <footer>
     <small>© 2026 올바른 자세 가이드.</small>
   </footer>
+
+  <script src="script.js"></script>
 
 </body>
 
