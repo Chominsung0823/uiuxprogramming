@@ -46,20 +46,70 @@
     <!-- 훈련 기능 -->
     <section id="features">
       <h2>훈련 기능</h2>
-      <ul class="feature-list">
-        <li class="feature-card">
-          <h3>바른 자세에 대한 정보</h3>
-          <p>여러가지 상황에 대한 올바른 자세 정보를 제공합니다.</p>
-        </li>
-        <li class="feature-card">
-          <h3>따라해보기</h3>
-          <p>본인의 상황에 따라 올바른 자세를 연습해볼 수 있습니다.</p>
-        </li>
-        <li class="feature-card">
-          <h3>자세 유지 기록</h3>
-          <p>올바른 자세를 유지한 시간을 기록하고 분석합니다.</p>
-        </li>
-      </ul>
+      <div class="tabs" role="tablist" aria-label="기능 선택">
+        <button 
+          id="tab-practice"
+          class="tab is-active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="feature-practice"
+          data-target="#feature-practice">
+          단계별 연습
+        </button>
+
+        <button 
+          id="tab-record"
+          class="tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="feature-record"
+          data-target="#feature-record">
+          자세 유지 기록
+        </button>
+
+
+        <button 
+          id="tab-feedback"
+          class="tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="feature-feedback"
+          data-target="#feature-feedback">
+          자세 유지 피드백
+        </button>
+      </div>
+
+      <div 
+        id="feature-practice"
+        class="panel is-active"
+        role="tabpanel"
+        aria-labelledby="tab-practice">
+        <h3>단계별 자세 유지 연습</h3>
+        <p>본인의 상황에 따라 올바른 자세를 연습해볼 수 있습니다.</p>       
+      </div>
+        
+      <div 
+        id="feature-record"
+        class="panel"
+        role="tabpanel"
+        aria-labelledby="tab-record"
+        hidden>
+        <h3>자세 유지 기록</h3>
+        <p>자세 유지 시간을 기록하고, 점차 늘려가며 연습합니다.</p>
+      </div>
+
+      <div 
+        id="feature-feedback"
+        class="panel"
+        role="tabpanel"
+        aria-labelledby="tab-feedback"
+        hidden>
+        <h3>자세 유지 피드백</h3>
+        <p>자세 유지 시간을 분석하여, 올바른 자세를 유지할 수 있도록 피드백을 제공합니다.</p>
+      </div>
     </section>
 
     <!-- 서비스 이용 방법 -->
@@ -71,6 +121,37 @@
         <li>따라해보기 기능을 통해 연습</li>
         <li>자세 유지 기록 확인</li>
       </ol>
+    </section>
+
+    <section id="event-practice">
+        <h2> 교정 준비 설정</h2>
+
+        <div class="event-grid">
+            <article class="event-card">
+                <h3>화면 테마</h3>
+                <button id="themeButton" type="button">다크 테마 바꾸기</button>
+            </article>
+
+            <article class="event-card">
+                <h3>사용자 정보</h3>
+                <label for="nickname">사용자 이름</label>
+                <input type="text" id="nickname" maxlength="10">
+                <p id="nicknameCount" aria-live="polite">0 / 10</p>
+            </article>
+
+            <article class="event-card">
+                <h3>영상 활용 의의</h3>
+                <label class="agree-row">
+                  <input type="checkbox" id="agreeCheck">
+                  자세 분석을 위한 영상 활용에 동의합니다.
+                </label>
+                <p id="agreeMessage" aria-live="polite">
+                  동의 후 훈련을 시작할 수 있습니다.
+                </p>
+                <button id="startButton" type="button" disabled>
+                  훈련 시작하기
+                </button>
+        </div>
     </section>
 
     <!-- 교정 훈련 소식 받기 -->
