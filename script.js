@@ -132,6 +132,11 @@ const restartButton = document.querySelector("#restart-button");
 const summaryTitle = document.querySelector("#summary-title");
 const summaryDuration = document.querySelector("#summary-duration");
 const summaryQna = document.querySelector("#summary-qna");
+const completedSettingsButton = document.querySelector("#completed-settings-button");
+const completedSettings = document.querySelector("#completed-settings");
+const completedTitle = document.querySelector("#completed-title");
+const completedDuration = document.querySelector("#completed-duration");
+const completedQna = document.querySelector("#completed-qna");
 const durationValues = ["3", "5", "10"];
 
 const formData = {
@@ -218,7 +223,27 @@ optionNext.addEventListener("click", () => {
 });
 
 summaryPrev.addEventListener("click", () => showStep(1));
-finishButton.addEventListener("click", () => showStep(3));
+function hideCompletedSettings() {
+    completedSettings.hidden = true;
+    completedSettingsButton.setAttribute("aria-expanded", "false");
+    completedSettingsButton.textContent = "완료한 설정 확인하기";
+}
+
+finishButton.addEventListener("click", () => {
+    completedTitle.textContent = formData.title;
+    completedDuration.textContent = formData.duration + "분";
+    completedQna.textContent = formData.qna ? formData.qnaCount + "개 포함" : "미포함";
+    hideCompletedSettings();
+    showStep(3);
+});
+
+completedSettingsButton.addEventListener("click", () => {
+    const isExpanded = completedSettingsButton.getAttribute("aria-expanded") === "true";
+    completedSettings.hidden = isExpanded;
+    completedSettingsButton.setAttribute("aria-expanded", String(!isExpanded));
+    completedSettingsButton.textContent = isExpanded ? "완료한 설정 확인하기" : "설정 내용 숨기기";
+});
+
 restartButton.addEventListener("click", () => {
     formData.title = "";
     formData.duration = "5";
@@ -235,5 +260,6 @@ restartButton.addEventListener("click", () => {
     summaryTitle.textContent = "";
     summaryDuration.textContent = "";
     summaryQna.textContent = "";
+    hideCompletedSettings();
     showStep(0);
 });

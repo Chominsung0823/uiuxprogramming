@@ -359,6 +359,40 @@ body.dark #recording-dialog {background: #50515f; color:#fff;}
     padding: 12px 0;
     border-bottom: 1px solid #deddea;
 }
+
+.completed-settings {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #deddea;
+    border-radius: 8px;
+}
+
+.completed-settings h4 {
+    margin: 0 0 8px;
+}
+
+.completed-settings dl {
+    margin: 0;
+}
+
+.completed-settings dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid #deddea;
+}
+
+.completed-settings dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+
+.completed-settings:not([hidden]) + #restart-button {
+    margin-top: 12px;
+}
+
 .training-flow .step-actions {
     display: flex;
     gap: 12px;
@@ -368,6 +402,10 @@ body.dark #recording-dialog {background: #50515f; color:#fff;}
 body.dark .training-flow {
     background-color: #50515f;
     border-color: #2d2e38;
+}
+
+body.dark .completed-settings {
+    border-color: #777987;
 }
 
 /* 웹페이지가 표시되는 가로 폭이 768px 이하일 때만 적용 */
@@ -440,6 +478,8 @@ body.dark .training-flow {
     #recording-dialog .dialog-actions button {width: 100%;}
     .training-flow .step-actions {flex-direction: column-reverse;}
     .training-flow .step-actions button {width: 100%;}
+    .completed-settings dl > div {flex-wrap: wrap;}
+    .completed-settings dd {max-width: 100%; text-align: left;}
     .training-flow input[type="checkbox"],
     .training-flow input[type="radio"] {width: auto;}
 }
