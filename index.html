@@ -227,20 +227,70 @@
             </div>
             <button id="restart-button" type="button">다시 설정하기</button>
     </section>
+              </section>
 
     <!-- 교정 훈련 소식 받기 -->
     <section id="subscribe" class="subscribe-card">
       <h2>교정 훈련 소식 받기</h2>
-      <form id="subscribe-form">
-        <label for="email">이메일</label>
-        <input type="email" id="email" name="email">
-        <button id="subscribeButton" type="submit">훈련 소식 신청하기</button>
-      </form>
-      
-      <p id="subscribeMessage" aria-live="polite">
-        이메일을 입력한 뒤 신청해주세요.
-      </p>
+      <form id="subscribe-form" novalidate>
+        <div class="form-field">
+          <label for="subscriber-name">이름</label>
+          <input type="text" id="subscriber-name" name="name" minlength="2" maxlength="10" required aria-describedby="name-help name-count name-error">
+          <small id="name-help">2~10자로 입력해 주세요.</small>
+          <small id="name-count" aria-live="polite">0 / 10자</small>
+          <p id="name-error" class="field-error" aria-live="polite"></p>
+        </div>
 
+        <div class="form-field">
+          <label for="email">이메일</label>
+          <input type="email" id="email" name="email" autocomplete="email" required aria-describedby="email-help email-error">
+          <small id="email-help">신청 결과와 훈련 소식을 받을 주소를 입력해 주세요.</small>
+          <p id="email-error" class="field-error" aria-live="polite"></p>
+        </div>
+
+        <div class="form-field">
+          <label for="interest">관심 있는 훈련 주제</label>
+          <select id="interest" name="interest" required aria-describedby="interest-help interest-error">
+            <option value="">주제를 선택해 주세요</option>
+            <option value="desk">앉은 자세와 책상 환경</option>
+            <option value="stretch">목·어깨 스트레칭</option>
+            <option value="habit">자세 습관 만들기</option>
+          </select>
+          <small id="interest-help">가장 먼저 받고 싶은 소식 하나를 선택해 주세요.</small>
+          <p id="interest-error" class="field-error" aria-live="polite"></p>
+        </div>
+
+        <label class="form-check" for="consultation-request">
+          <input type="checkbox" id="consultation-request" name="consultationRequest">
+          자세 상담 안내도 받고 싶어요.
+        </label>
+        <fieldset id="consultation-fields" disabled hidden aria-describedby="consultation-help">
+          <legend>상담 연락 정보</legend>
+          <small id="consultation-help">전화번호와 연락 가능한 시간을 입력해 주세요.</small>
+          <div class="form-field">
+            <label for="phone">휴대전화</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel" pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}" aria-describedby="phone-help phone-error">
+            <small id="phone-help">예: 010-1234-5678</small>
+            <p id="phone-error" class="field-error" aria-live="polite"></p>
+          </div>
+          <div class="form-field">
+            <label for="contact-time">연락 가능한 시간</label>
+            <select id="contact-time" name="contactTime" aria-describedby="contact-time-error">
+              <option value="">시간을 선택해 주세요</option>
+              <option value="morning">오전 (9~12시)</option>
+              <option value="afternoon">오후 (12~18시)</option>
+              <option value="evening">저녁 (18~20시)</option>
+            </select>
+            <p id="contact-time-error" class="field-error" aria-live="polite"></p>
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button id="subscribeButton" type="submit">훈련 소식 신청하기</button>
+          <button id="subscribe-reset" type="reset" hidden>다시 작성하기</button>
+        </div>
+      </form>
+      <p id="subscribeMessage" role="status" aria-live="polite">필수 항목을 입력하고 관심 주제를 선택해 주세요.</p>
     </section>
   </main>
   <!-- 메인 콘텐츠 끝 -->

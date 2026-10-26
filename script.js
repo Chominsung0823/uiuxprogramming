@@ -1,44 +1,154 @@
 const serviceName = "올바른 자세 가이드";
-let isSubscribed = false;
-let submitCount = 0;
-
-
-function makeSubscribeMessage(email, subscribed) {
-    if (subscribed == true) {
-        return email + "로 신청이 완료되었습니다."
-    }
-    
-    return "이메일을 입력한 뒤 신청해주세요."
-}
-
 const subscribeForm = document.querySelector("#subscribe-form");
+const subscriberNameInput = document.querySelector("#subscriber-name");
 const emailInput = document.querySelector("#email");
+const interestInput = document.querySelector("#interest");
+const consultationRequest = document.querySelector("#consultation-request");
+const consultationFields = document.querySelector("#consultation-fields");
+const phoneInput = document.querySelector("#phone");
+const contactTimeInput = document.querySelector("#contact-time");
 const subscribeButton = document.querySelector("#subscribeButton");
+const subscribeResetButton = document.querySelector("#subscribe-reset");
 const subscribeMessage = document.querySelector("#subscribeMessage");
+const nameCount = document.querySelector("#name-count");
+const hasSubmittedForm = { value: false };
 
-function handleSubscribe(event) {
-    event.preventDefault();
+const formFields = [
+    { input: subscriberNameInput, error: document.querySelector("#name-error") },
+    { input: emailInput, error: document.querySelector("#email-error") },
+    { input: interestInput, error: document.querySelector("#interest-error") },
+    { input: phoneInput, error: document.querySelector("#phone-error") },
+    { input: contactTimeInput, error: document.querySelector("#contact-time-error") }
+];
 
-    const subscribeEmail = emailInput.value.trim();
-
-    if (subscribeEmail === "") {
-        subscribeMessage.textContent = 
-            "이메일을 입력한 뒤 신청해주세요.";
-        emailInput.focus();
-        return;
+function getFieldError(input) {
+    if (!input.required && input.value.trim() === "") return "";
+    if (input.validity.valueMissing) return "필수 항목입니다. 내용을 입력하거나 선택해 주세요.";
+    if (input === subscriberNameInput && input.value.trim().length < 2) {
+        return "이름은 공백을 제외하고 2자 이상 입력해 주세요.";
     }
-
-    isSubscribed = true;
-    submitCount += 1;
-    subscribeMessage.textContent = makeSubscribeMessage(subscribeEmail, isSubscribed);
-
-    subscribeMessage.classList.add("is-success");
-
-    subscribeButton.textContent = "신청 완료";
-    subscribeButton.disabled = true;
+    if (input === emailInput && input.validity.typeMismatch) {
+        return "이메일 형식이 올바르지 않습니다. 예: name@example.com";
+    }
+    if (input === phoneInput && input.validity.patternMismatch) {
+        return "휴대전화 번호를 010-1234-5678 형식으로 입력해 주세요.";
+    }
+    return "";
 }
 
-subscribeForm.addEventListener("submit", handleSubscribe);
+function updateFieldState(field) {
+    const errorMessage = getFieldError(field.input);
+    const shouldShowError = hasSubmittedForm.value || field.input.value.trim() !== "";
+    field.error.textContent = shouldShowError ? errorMessage : "";
+    field.input.setAttribute("aria-invalid", String(Boolean(shouldShowError && errorMessage)));
+}
+
+function updateNameCount() {
+    const length = subscriberNameInput.value.trim().length;
+    const requirement = length >= 2 ? "최소 글자 수 충족" : "최소 2자 필요";
+    nameCount.textContent = `${subscriberNameInput.value.length} / 10자 · ${requirement}`;
+}
+
+function updateConsultationFields() {
+    const enabled = consultationRequest.checked;
+    consultationFields.hidden = !enabled;
+    consultationFields.disabled = !enabled;
+    phoneInput.required = enabled;
+    contactTimeInput.required = enabled;
+    if (enabled) {
+        formFields.slice(3).forEach(updateFieldState);
+    } else {
+        formFields.slice(3).forEach((field) => {
+            field.error.textContent = "";
+            field.input.removeAttribute("aria-invalid");
+        });
+    }
+}
+
+function validateSubscribeForm() {
+    const invalidFields = formFields.filter((field) => {
+        if (field.input.disabled) return false;
+        updateFieldState(field);
+        return Boolean(getFieldError(field.input));
+    });
+
+    if (invalidFields.length > 0) {
+        subscribeMessage.textContent = `입력 내용을 확인해 주세요. ${invalidFields.length}개 항목을 수정해야 합니다.`;
+        subscribeMessage.className = "is-error";
+        invalidFields[0].input.focus();
+        return false;
+    }
+    return true;
+}
+
+subscriberNameInput.addEventListener("input", () => {
+    updateNameCount();
+    updateFieldState(formFields[0]);
+});
+formFields.slice(1).forEach((field) => {
+    field.input.addEventListener("input", () => updateFieldState(field));
+    field.input.addEventListener("change", () => updateFieldState(field));
+});
+consultationRequest.addEventListener("change", updateConsultationFields);
+
+subscribeForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    hasSubmittedForm.value = true;
+
+    if (!validateSubscribeForm()) return;
+
+    const submission = {
+        name: subscriberNameInput.value.trim(),
+        email: emailInput.value.trim(),
+        interest: interestInput.value,
+        consultationRequested: consultationRequest.checked,
+        phone: consultationRequest.checked ? phoneInput.value.trim() : "",
+        contactTime: consultationRequest.checked ? contactTimeInput.value : "",
+        submittedAt: new Date().toISOString()
+    };
+
+    subscribeButton.disabled = true;
+    subscribeButton.textContent = "신청 내용을 저장하고 있습니다...";
+    subscribeMessage.className = "is-pending";
+    subscribeMessage.textContent = "신청 내용을 저장하고 있습니다. 잠시만 기다려 주세요.";
+
+    window.setTimeout(() => {
+        try {
+            const savedSubmissions = JSON.parse(localStorage.getItem("postureNewsletterRequests") || "[]");
+            savedSubmissions.push(submission);
+            localStorage.setItem("postureNewsletterRequests", JSON.stringify(savedSubmissions));
+            subscribeMessage.className = "is-success";
+            subscribeMessage.textContent = `${submission.name}님, ${submission.email} 주소로 훈련 소식 신청이 완료되었습니다.`;
+            subscribeButton.textContent = "신청 완료";
+            subscribeResetButton.hidden = false;
+        } catch (error) {
+            subscribeMessage.className = "is-error";
+            subscribeMessage.textContent = "브라우저에 신청 내용을 저장하지 못했습니다. 입력 내용은 남아 있으니 저장 공간을 확인한 뒤 다시 신청해 주세요.";
+            subscribeButton.disabled = false;
+            subscribeButton.textContent = "다시 신청하기";
+        }
+    }, 350);
+});
+
+subscribeForm.addEventListener("reset", () => {
+    window.setTimeout(() => {
+        hasSubmittedForm.value = false;
+        formFields.forEach((field) => {
+            field.error.textContent = "";
+            field.input.removeAttribute("aria-invalid");
+        });
+        consultationFields.hidden = true;
+        consultationFields.disabled = true;
+        phoneInput.required = false;
+        contactTimeInput.required = false;
+        updateNameCount();
+        subscribeMessage.className = "";
+        subscribeMessage.textContent = "필수 항목을 입력하고 관심 주제를 선택해 주세요.";
+        subscribeButton.disabled = false;
+        subscribeButton.textContent = "훈련 소식 신청하기";
+        subscribeResetButton.hidden = true;
+    }, 0);
+});
 
 const themeButton = document.querySelector("#themeButton");
 const nicknameInput = document.querySelector("#nickname");

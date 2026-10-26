@@ -121,6 +121,110 @@ p {
     border-radius: 12px;
 }
 
+#subscribe-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    max-width: 720px;
+}
+
+.form-field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.form-field label,
+#consultation-fields legend {
+    font-weight: 700;
+}
+
+.form-field input,
+.form-field select {
+    width: 100%;
+    min-height: 48px;
+    background-color: #ffffff;
+}
+
+.form-field small,
+#consultation-fields > small {
+    color: #555763;
+    font-size: 14px;
+}
+
+.field-error {
+    min-height: 0;
+    margin: 0;
+    color: #a82222;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.field-error:empty {
+    display: none;
+}
+
+.form-field [aria-invalid="true"] {
+    border-color: #a82222;
+}
+
+.form-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.form-check input {
+    flex: 0 0 auto;
+    width: auto;
+    margin-top: 7px;
+    accent-color: #009708;
+}
+
+#consultation-fields {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #83d48a;
+    border-radius: 8px;
+}
+
+#consultation-fields[hidden] {
+    display: none;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+#subscribeMessage {
+    max-width: 720px;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+#subscribeMessage.is-error {
+    color: #8d1b1b;
+    background-color: #fff0ee;
+    font-weight: 700;
+}
+
+#subscribeMessage.is-pending {
+    color: #344b67;
+    background-color: #edf4fb;
+    font-weight: 700;
+}
+
+#subscribeMessage.is-success {
+    color: #245c3a;
+    background-color: #e6f7e6;
+    font-weight: 700;
+}
+
 form {
     display: flex;
     align-items: center;
@@ -162,19 +266,6 @@ input:focus {
 
 button:active {
     transform: translateY(1px);
-}
-
-#subscribeMessage {
-    margin-top: 16px;
-    color: #555763;
-}
-
-#subscribeMessage.is-success {
-    color: #00b609;
-    background-color: #e6f7e6;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 700;
 }
 
 #subscribeButton:disabled {
@@ -240,6 +331,31 @@ body.dark .subscribe-card,
 body.dark .event-card{
     background-color: #50515f;
     border-color: #2d2e38;
+}
+
+body.dark .form-field small,
+body.dark #consultation-fields > small {
+    color: #e1e2e8;
+}
+
+body.dark .form-field input,
+body.dark .form-field select {
+    color: #292a31;
+}
+
+body.dark #subscribeMessage.is-error {
+    color: #ffd8d2;
+    background-color: #612f32;
+}
+
+body.dark #subscribeMessage.is-pending {
+    color: #dcecff;
+    background-color: #34465b;
+}
+
+body.dark #subscribeMessage.is-success {
+    color: #d9f5df;
+    background-color: #31533c;
 }
 
 #agreeMessage {
@@ -447,10 +563,14 @@ body.dark .completed-settings {
         grid-template-columns: 1fr;
     }
 
-    /* 이메일 입력창과 버튼도 한 열로 배치 */
+    /* 폼 입력창과 버튼도 한 열로 배치 */
     form {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    #subscribe-form {
+        display: grid;
     }
 
     input,
@@ -461,6 +581,18 @@ body.dark .completed-settings {
     button {
         /* 모바일에서도 버튼의 누르는 영역이 너무 낮아지지 않게 설정 */
         min-height: 48px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button {
+        width: 100%;
+    }
+
+    .form-check input {
+        width: auto;
     }
 
     .tabs {
