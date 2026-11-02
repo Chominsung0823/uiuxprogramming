@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>나의 첫 웹페이지</title>
+  <title>올바른 자세 가이드</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap" rel="stylesheet">
@@ -23,10 +23,17 @@
     <h1>올바른 자세 가이드 </h1>
     <p>올바른 자세를 유지하여 건강을 지킵니다.</p>
     <nav aria-label="주요 메뉴">
-      <a href="#about">서비스 소개</a>
-      <a href="#features">훈련 기능</a>
-      <a href="#steps">이용 방법</a>
-      <a href="#subscribe">교정 훈련 소식 받기</a>
+      <button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-menu">
+        메뉴 열기
+      </button>
+      <ul id="primary-menu">
+        <li><a href="#about">서비스 소개</a></li>
+        <li><a href="#features">훈련 기능</a></li>
+        <li><a href="#steps">이용 방법</a></li>
+        <li><a href="#event-practice">훈련 시작</a></li>
+        <li><a href="#records">훈련 기록</a></li>
+        <li><a href="#subscribe">훈련 소식 신청</a></li>
+      </ul>
     </nav>
   </header>
 
@@ -228,6 +235,19 @@
             <button id="restart-button" type="button">다시 설정하기</button>
     </section>
               </section>
+
+    <section id="records" class="records-section">
+      <h2>자세 연습 목록</h2>
+      <p>연습 항목을 완료하고 진행 상태를 확인해 보세요.</p>
+      <div class="record-filters" role="group" aria-label="연습 목록 진행 상태 필터">
+        <button type="button" class="record-filter is-active" data-status="all" aria-pressed="true">전체</button>
+        <button type="button" class="record-filter" data-status="ready" aria-pressed="false">연습 전</button>
+        <button type="button" class="record-filter" data-status="complete" aria-pressed="false">연습 완료</button>
+      </div>
+      <p id="records-count" class="records-count" aria-live="polite"></p>
+      <p id="records-message" class="records-message" role="status" aria-live="polite"></p>
+      <ul id="records-list" class="records-list" aria-label="자세 연습 항목"></ul>
+    </section>
 
     <!-- 교정 훈련 소식 받기 -->
     <section id="subscribe" class="subscribe-card">

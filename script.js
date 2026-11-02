@@ -1,4 +1,208 @@
 const serviceName = "올바른 자세 가이드";
+const menuToggle = document.querySelector("#menu-toggle");
+const primaryMenu = document.querySelector("#primary-menu");
+const primaryMenuLinks = primaryMenu.querySelectorAll("a");
+const mobileMenuQuery = window.matchMedia("(max-width: 768px)");
+
+function setMenuExpanded(isExpanded) {
+    primaryMenu.hidden = !isExpanded;
+    menuToggle.setAttribute("aria-expanded", String(isExpanded));
+    menuToggle.textContent = isExpanded ? "메뉴 닫기" : "메뉴 열기";
+}
+
+function updateMenuForViewport() {
+    setMenuExpanded(!mobileMenuQuery.matches);
+}
+
+function updateCurrentMenu() {
+    const currentHash = window.location.hash || "#about";
+    const currentLink = Array.from(primaryMenuLinks).find((link) => link.hash === currentHash)
+        || primaryMenuLinks[0];
+
+    primaryMenuLinks.forEach((link) => {
+        if (link === currentLink) {
+            link.setAttribute("aria-current", "location");
+        } else {
+            link.removeAttribute("aria-current");
+        }
+    });
+}
+
+menuToggle.addEventListener("click", () => {
+    setMenuExpanded(menuToggle.getAttribute("aria-expanded") !== "true");
+});
+primaryMenuLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+        if (mobileMenuQuery.matches) setMenuExpanded(false);
+    });
+});
+mobileMenuQuery.addEventListener("change", updateMenuForViewport);
+window.addEventListener("hashchange", updateCurrentMenu);
+window.addEventListener("popstate", updateCurrentMenu);
+updateMenuForViewport();
+updateCurrentMenu();
+
+const recordsList = document.querySelector("#records-list");
+const recordsCount = document.querySelector("#records-count");
+const recordsMessage = document.querySelector("#records-message");
+const recordFilters = document.querySelectorAll(".record-filter");
+const initialExerciseItems = [
+    {
+        id: "sitting-posture",
+        title: "의자에 앉을 때 골반 위치 확인하기",
+        category: "기본 자세",
+        duration: "3분",
+        description: "엉덩이를 의자 안쪽까지 넣고 양발을 바닥에 편안히 둡니다.",
+        status: "ready"
+    },
+    {
+        id: "screen-height",
+        title: "화면 높이와 시선 맞추기",
+        category: "책상 환경",
+        duration: "5분",
+        description: "화면 상단이 눈높이에 오도록 조정하고 목을 곧게 세웁니다.",
+        status: "ready"
+    },
+    {
+        id: "shoulder-stretch",
+        title: "목과 어깨 가볍게 풀기",
+        category: "스트레칭",
+        duration: "3분",
+        description: "통증이 없는 범위에서 어깨를 천천히 돌리고 목 옆을 늘립니다.",
+        status: "ready"
+    },
+    {
+        id: "posture-habit",
+        title: "1분 자세 점검 습관 만들기",
+        category: "습관 만들기",
+        duration: "1분",
+        description: "한 시간에 한 번 자세를 점검할 알림을 정하고 바른 자세를 확인합니다.",
+        status: "ready"
+    }
+];
+let exerciseItems = initialExerciseItems.map((item) => ({ ...item }));
+let activeRecordFilter = "all";
+
+function isExerciseItem(item) {
+    return item && typeof item.id === "string"
+        && typeof item.title === "string"
+        && typeof item.category === "string"
+        && typeof item.duration === "string"
+        && typeof item.description === "string"
+        && (item.status === "ready" || item.status === "complete");
+}
+
+try {
+    const savedItems = localStorage.getItem("postureExerciseItems");
+    if (savedItems !== null) {
+        const parsedItems = JSON.parse(savedItems);
+        if (!Array.isArray(parsedItems) || !parsedItems.every(isExerciseItem)) {
+            throw new Error("저장된 연습 목록의 형식이 올바르지 않습니다.");
+        }
+        exerciseItems = parsedItems;
+    }
+} catch (error) {
+    recordsMessage.textContent = "저장된 연습 목록을 불러오지 못했습니다. 기본 연습 목록을 표시합니다.";
+    recordsMessage.classList.add("is-error");
+}
+
+function persistExerciseItems() {
+    try {
+        localStorage.setItem("postureExerciseItems", JSON.stringify(exerciseItems));
+        return true;
+    } catch (error) {
+        recordsMessage.textContent = "변경 내용을 브라우저에 저장하지 못했습니다. 저장 공간을 확인해 주세요.";
+        recordsMessage.classList.add("is-error");
+        return false;
+    }
+}
+
+function renderExerciseItems() {
+    const visibleItems = exerciseItems.filter((item) => (
+        activeRecordFilter === "all" || item.status === activeRecordFilter
+    ));
+    recordsList.replaceChildren();
+    recordsCount.textContent = `${visibleItems.length}개의 연습 항목을 표시하고 있습니다.`;
+
+    if (visibleItems.length === 0) {
+        recordsMessage.textContent = exerciseItems.length === 0
+            ? "아직 등록된 연습 항목이 없습니다. 훈련 설정을 완료하면 이곳에 표시됩니다."
+            : "선택한 진행 상태의 항목이 없습니다. 다른 필터를 선택해 보세요.";
+        recordsMessage.classList.remove("is-error");
+        return;
+    }
+
+    if (!recordsMessage.classList.contains("is-error")) recordsMessage.textContent = "";
+    visibleItems.forEach((item) => {
+        const listItem = document.createElement("li");
+        listItem.className = "record-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = item.title;
+        const metadata = document.createElement("p");
+        metadata.className = "record-metadata";
+        const categoryAndDuration = document.createElement("span");
+        categoryAndDuration.textContent = `${item.category} · ${item.duration}`;
+        const statusLabel = document.createElement("span");
+        statusLabel.className = `record-status-label is-${item.status}`;
+        statusLabel.textContent = item.status === "complete" ? "연습 완료" : "연습 전";
+        metadata.append(categoryAndDuration, statusLabel);
+
+        const detail = document.createElement("p");
+        detail.className = "record-detail";
+        detail.textContent = item.description;
+        detail.hidden = true;
+
+        const actions = document.createElement("div");
+        actions.className = "record-actions";
+        const detailButton = document.createElement("button");
+        detailButton.type = "button";
+        detailButton.textContent = "상세 보기";
+        detailButton.setAttribute("aria-expanded", "false");
+        detailButton.addEventListener("click", () => {
+            const isExpanded = detailButton.getAttribute("aria-expanded") === "true";
+            detail.hidden = isExpanded;
+            detailButton.setAttribute("aria-expanded", String(!isExpanded));
+            detailButton.textContent = isExpanded ? "상세 보기" : "상세 숨기기";
+        });
+
+        const statusButton = document.createElement("button");
+        statusButton.type = "button";
+        statusButton.className = "record-status-button";
+        statusButton.textContent = item.status === "complete" ? "연습 전으로 변경" : "연습 완료 표시";
+        statusButton.addEventListener("click", () => {
+            const nextStatus = item.status === "complete" ? "ready" : "complete";
+            exerciseItems = exerciseItems.map((record) => (
+                record.id === item.id ? { ...record, status: nextStatus } : record
+            ));
+            const saved = persistExerciseItems();
+            renderExerciseItems();
+            if (saved) {
+                recordsMessage.textContent = nextStatus === "complete"
+                    ? "연습 완료 상태를 저장했습니다."
+                    : "연습 전 상태를 저장했습니다.";
+            }
+        });
+
+        actions.append(detailButton, statusButton);
+        listItem.append(heading, metadata, detail, actions);
+        recordsList.append(listItem);
+    });
+}
+
+recordFilters.forEach((filter) => {
+    filter.addEventListener("click", () => {
+        activeRecordFilter = filter.dataset.status;
+        recordFilters.forEach((button) => {
+            const isSelected = button === filter;
+            button.classList.toggle("is-active", isSelected);
+            button.setAttribute("aria-pressed", String(isSelected));
+        });
+        renderExerciseItems();
+    });
+});
+renderExerciseItems();
+
 const subscribeForm = document.querySelector("#subscribe-form");
 const subscriberNameInput = document.querySelector("#subscriber-name");
 const emailInput = document.querySelector("#email");
@@ -343,6 +547,26 @@ finishButton.addEventListener("click", () => {
     completedTitle.textContent = formData.title;
     completedDuration.textContent = formData.duration + "분";
     completedQna.textContent = formData.qna ? formData.qnaCount + "개 포함" : "미포함";
+    exerciseItems = [
+        ...exerciseItems,
+        {
+            id: `custom-${Date.now()}-${exerciseItems.length}`,
+            title: formData.title,
+            category: "맞춤 훈련",
+            duration: `${formData.duration}분`,
+            description: `질의응답 ${formData.qna ? `${formData.qnaCount}개 포함` : "미포함"}으로 설정한 자세 연습입니다.`,
+            status: "complete"
+        }
+    ];
+    activeRecordFilter = "all";
+    recordFilters.forEach((filter) => {
+        const isSelected = filter.dataset.status === activeRecordFilter;
+        filter.classList.toggle("is-active", isSelected);
+        filter.setAttribute("aria-pressed", String(isSelected));
+    });
+    const saved = persistExerciseItems();
+    renderExerciseItems();
+    if (saved) recordsMessage.textContent = "완료한 맞춤 훈련을 연습 목록에 저장했습니다.";
     hideCompletedSettings();
     showStep(3);
 });
