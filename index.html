@@ -199,12 +199,12 @@
             <label for="duration-range">훈련 시간</label>
             <input id="duration-range" type="range" min="0" max="2" step="1" value="1">
             <output id="duration-value" for="duration-range">5분</output>
-            <label><input type="checkbox" id="qna-option">질의응답 포함</label>
-            <fieldset id="qna-options" hidden>
-              <legend>질문 수</legend>
-              <label><input type="radio" name="qna-count" value="1"> 1개</label>
-              <label><input type="radio" name="qna-count" value="2" checked> 2개</label>
-              <label><input type="radio" name="qna-count" value="3"> 3개</label>  
+            <fieldset>
+              <legend>집중 연습 항목</legend>
+              <label><input type="radio" name="training-focus" value="바른 앉은 자세" checked> 바른 앉은 자세</label>
+              <label><input type="radio" name="training-focus" value="화면 높이와 시선"> 화면 높이와 시선</label>
+              <label><input type="radio" name="training-focus" value="목·어깨 스트레칭"> 목·어깨 스트레칭</label>
+              <label><input type="radio" name="training-focus" value="자세 점검 습관"> 자세 점검 습관</label>
             </fieldset>
             <div class="step-actions">
               <button id="option-prev" type="button">이전</button>
@@ -217,7 +217,7 @@
             <div class="summary-list">
               <div><span>훈련 제목</span><strong id="summary-title"></strong></div>
               <div><span>훈련 시간</span><strong id="summary-duration"></strong></div>
-              <div><span>질의응답</span><strong id="summary-qna"></strong></div>
+              <div><span>집중 연습 항목</span><strong id="summary-focus"></strong></div>
             </div>
             <div class="step-actions">
               <button id="summary-prev" type="button">수정하기</button>
@@ -236,7 +236,7 @@
               <dl>
                 <div><dt>훈련 제목</dt><dd id="completed-title"></dd></div>
                 <div><dt>훈련 시간</dt><dd id="completed-duration"></dd></div>
-                <div><dt>질의응답</dt><dd id="completed-qna"></dd></div>
+                <div><dt>집중 연습 항목</dt><dd id="completed-focus"></dd></div>
               </dl>
             </div>
             <button id="restart-button" type="button">다시 설정하기</button>

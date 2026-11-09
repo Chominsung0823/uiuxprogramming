@@ -442,8 +442,7 @@ const titleError = document.querySelector("#title-error");
 const titleNext = document.querySelector("#title-next");
 const durationRange = document.querySelector("#duration-range");
 const durationValue = document.querySelector("#duration-value");
-const qnaOption = document.querySelector("#qna-option");
-const qnaOptions = document.querySelector("#qna-options");
+const trainingFocusOptions = document.querySelectorAll('input[name="training-focus"]');
 const optionPrev = document.querySelector("#option-prev");
 const optionNext = document.querySelector("#option-next");
 const summaryPrev = document.querySelector("#summary-prev");
@@ -451,19 +450,18 @@ const finishButton = document.querySelector("#finish-button");
 const restartButton = document.querySelector("#restart-button");
 const summaryTitle = document.querySelector("#summary-title");
 const summaryDuration = document.querySelector("#summary-duration");
-const summaryQna = document.querySelector("#summary-qna");
+const summaryFocus = document.querySelector("#summary-focus");
 const completedSettingsButton = document.querySelector("#completed-settings-button");
 const completedSettings = document.querySelector("#completed-settings");
 const completedTitle = document.querySelector("#completed-title");
 const completedDuration = document.querySelector("#completed-duration");
-const completedQna = document.querySelector("#completed-qna");
+const completedFocus = document.querySelector("#completed-focus");
 const durationValues = ["3", "5", "10"];
 
 const formData = {
     title: "",
     duration: "5",
-    qna: false,
-    qnaCount: "2"
+    focus: "바른 앉은 자세"
 };
 
 function showStep(index) {
@@ -530,19 +528,14 @@ titleNext.addEventListener("click", () => {
 durationRange.addEventListener("input", () => {
     durationValue.value = durationValues[durationRange.value] + "분";
 });
-qnaOption.addEventListener("change", () => {
-    qnaOptions.hidden = !qnaOption.checked;
-});
 
 optionPrev.addEventListener("click", () => showStep(0));
 optionNext.addEventListener("click", () => {
     formData.duration = durationValues[durationRange.value];
-    formData.qna = qnaOption.checked;
-    const count = document.querySelector('input[name="qna-count"]:checked');
-    formData.qnaCount = count.value;
+    formData.focus = document.querySelector('input[name="training-focus"]:checked').value;
     summaryTitle.textContent = formData.title;
     summaryDuration.textContent = formData.duration + "분";
-    summaryQna.textContent = formData.qna ? formData.qnaCount + "개 포함" : "미포함";
+    summaryFocus.textContent = formData.focus;
     showStep(2);
 });
 
@@ -556,15 +549,15 @@ function hideCompletedSettings() {
 finishButton.addEventListener("click", () => {
     completedTitle.textContent = formData.title;
     completedDuration.textContent = formData.duration + "분";
-    completedQna.textContent = formData.qna ? formData.qnaCount + "개 포함" : "미포함";
+    completedFocus.textContent = formData.focus;
     exerciseItems = [
         ...exerciseItems,
         {
             id: `custom-${Date.now()}-${exerciseItems.length}`,
             title: formData.title,
-            category: "맞춤 훈련",
+            category: formData.focus,
             duration: `${formData.duration}분`,
-            description: `질의응답 ${formData.qna ? `${formData.qnaCount}개 포함` : "미포함"}으로 설정한 자세 연습입니다.`,
+            description: `${formData.focus}에 집중하는 맞춤 자세 연습입니다.`,
             status: "complete"
         }
     ];
@@ -591,19 +584,18 @@ completedSettingsButton.addEventListener("click", () => {
 restartButton.addEventListener("click", () => {
     formData.title = "";
     formData.duration = "5";
-    formData.qna = false;
-    formData.qnaCount = "2";
+    formData.focus = "바른 앉은 자세";
     titleInput.value = "";
     titleError.textContent = "";
     titleInput.classList.remove("has-error");
     durationRange.value = "1";
     durationValue.value = "5분";
-    qnaOption.checked = false;
-    qnaOptions.hidden = true;
-    document.querySelector('input[name="qna-count"][value="2"]').checked = true;
+    trainingFocusOptions.forEach((option) => {
+        option.checked = option.value === formData.focus;
+    });
     summaryTitle.textContent = "";
     summaryDuration.textContent = "";
-    summaryQna.textContent = "";
+    summaryFocus.textContent = "";
     hideCompletedSettings();
     showStep(0);
 });
