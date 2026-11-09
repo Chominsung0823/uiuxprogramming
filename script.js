@@ -133,7 +133,7 @@ function renderExerciseItems() {
     }
 
     if (!recordsMessage.classList.contains("is-error")) recordsMessage.textContent = "";
-    visibleItems.forEach((item) => {
+    visibleItems.forEach((item, index) => {
         const listItem = document.createElement("li");
         listItem.className = "record-card";
 
@@ -149,6 +149,7 @@ function renderExerciseItems() {
         metadata.append(categoryAndDuration, statusLabel);
 
         const detail = document.createElement("p");
+        detail.id = `record-detail-${index}`;
         detail.className = "record-detail";
         detail.textContent = item.description;
         detail.hidden = true;
@@ -159,6 +160,7 @@ function renderExerciseItems() {
         detailButton.type = "button";
         detailButton.textContent = "상세 보기";
         detailButton.setAttribute("aria-expanded", "false");
+        detailButton.setAttribute("aria-controls", detail.id);
         detailButton.addEventListener("click", () => {
             const isExpanded = detailButton.getAttribute("aria-expanded") === "true";
             detail.hidden = isExpanded;
@@ -397,35 +399,39 @@ agreeCheck.addEventListener("change", handleAgreeChange);
 const tabs = document.querySelectorAll(".tab");
 const panels = document.querySelectorAll(".panel");
 
-function resetTabsAndPanels() {
-    tabs.forEach(function(tab) {
-        tab.classList.remove("is-active");
-        tab.setAttribute("aria-selected", "false");
-    });
-    panels.forEach(function(panel) {
-        panel.classList.remove("is-active");
-        panel.hidden = true;
-    });
-}
-
 function activateTab(clickedTab) {
-    const targetSelector = clickedTab.dataset.target;
-    const targetPanel = document.querySelector(targetSelector);
-
-    clickedTab.classList.add("is-active");
-    clickedTab.setAttribute("aria-selected", "true");
-
-    targetPanel.classList.add("is-active");
-    targetPanel.hidden = false;
+    tabs.forEach((tab) => {
+        const isSelected = tab === clickedTab;
+        tab.classList.toggle("is-active", isSelected);
+        tab.setAttribute("aria-selected", String(isSelected));
+        tab.tabIndex = isSelected ? 0 : -1;
+    });
+    panels.forEach((panel) => {
+        const isSelected = panel.id === clickedTab.getAttribute("aria-controls");
+        panel.classList.toggle("is-active", isSelected);
+        panel.hidden = !isSelected;
+    });
 }
 
 function handleTabClick(event) {
-    resetTabsAndPanels();
     activateTab(event.currentTarget);
 }
 
 tabs.forEach(function(tab) {
     tab.addEventListener("click", handleTabClick);
+    tab.addEventListener("keydown", (event) => {
+        const currentIndex = Array.from(tabs).indexOf(event.currentTarget);
+        let nextIndex;
+        if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabs.length;
+        if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === "Home") nextIndex = 0;
+        if (event.key === "End") nextIndex = tabs.length - 1;
+        if (nextIndex === undefined) return;
+
+        event.preventDefault();
+        tabs[nextIndex].focus();
+        activateTab(tabs[nextIndex]);
+    });
 });
 
 const trainingFlow = document.querySelector(".training-flow");
@@ -463,8 +469,12 @@ const formData = {
 function showStep(index) {
     flowSteps.forEach((step, i) => { step.hidden = i !== index; });
     progressItems.forEach((item, i) => {
-        item.classList.toggle("is-active", i === index);
+        const isCurrent = i === Math.min(index, progressItems.length - 1);
+        item.classList.toggle("is-active", isCurrent);
+        if (isCurrent) item.setAttribute("aria-current", "step");
+        else item.removeAttribute("aria-current");
     });
+    flowSteps[index].querySelector("h3").focus();
 }
 
 const recordingDialog = document.querySelector("#recording-dialog");
