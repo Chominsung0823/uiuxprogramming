@@ -42,6 +42,29 @@ window.addEventListener("popstate", updateCurrentMenu);
 updateMenuForViewport();
 updateCurrentMenu();
 
+function setDisclosureState(button, panel, isExpanded, collapsedLabel, expandedLabel) {
+    button.setAttribute("aria-expanded", String(isExpanded));
+    button.textContent = isExpanded ? expandedLabel : collapsedLabel;
+    panel.hidden = !isExpanded;
+}
+
+function bindDisclosure(button, panel, collapsedLabel, expandedLabel) {
+    button.addEventListener("click", () => {
+        const isExpanded = button.getAttribute("aria-expanded") === "true";
+        setDisclosureState(button, panel, !isExpanded, collapsedLabel, expandedLabel);
+    });
+}
+
+document.querySelectorAll(".faq-item .accordion-trigger").forEach((button) => {
+    const panel = document.getElementById(button.getAttribute("aria-controls"));
+    bindDisclosure(
+        button,
+        panel,
+        button.textContent.trim(),
+        button.dataset.expandedLabel
+    );
+});
+
 const recordsList = document.querySelector("#records-list");
 const recordsCount = document.querySelector("#records-count");
 const recordsMessage = document.querySelector("#records-message");
@@ -150,7 +173,7 @@ function renderExerciseItems() {
 
         const detail = document.createElement("p");
         detail.id = `record-detail-${index}`;
-        detail.className = "record-detail";
+        detail.className = "record-detail accordion-panel";
         detail.textContent = item.description;
         detail.hidden = true;
 
@@ -158,15 +181,11 @@ function renderExerciseItems() {
         actions.className = "record-actions";
         const detailButton = document.createElement("button");
         detailButton.type = "button";
+        detailButton.className = "accordion-trigger";
         detailButton.textContent = "상세 보기";
         detailButton.setAttribute("aria-expanded", "false");
         detailButton.setAttribute("aria-controls", detail.id);
-        detailButton.addEventListener("click", () => {
-            const isExpanded = detailButton.getAttribute("aria-expanded") === "true";
-            detail.hidden = isExpanded;
-            detailButton.setAttribute("aria-expanded", String(!isExpanded));
-            detailButton.textContent = isExpanded ? "상세 보기" : "상세 숨기기";
-        });
+        bindDisclosure(detailButton, detail, "상세 보기", "상세 숨기기");
 
         const statusButton = document.createElement("button");
         statusButton.type = "button";
@@ -457,6 +476,12 @@ const completedTitle = document.querySelector("#completed-title");
 const completedDuration = document.querySelector("#completed-duration");
 const completedFocus = document.querySelector("#completed-focus");
 const durationValues = ["3", "5", "10"];
+bindDisclosure(
+    completedSettingsButton,
+    completedSettings,
+    "완료한 설정 확인하기",
+    "설정 내용 숨기기"
+);
 
 const formData = {
     title: "",
@@ -492,6 +517,13 @@ startButton.addEventListener("click", () => {
 });
 
 recordingCancel.addEventListener("click", () => {
+    recordingDialog.close();
+    revokeRecordingAgreement();
+});
+
+recordingDialog.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
     recordingDialog.close();
     revokeRecordingAgreement();
 });
@@ -572,13 +604,6 @@ finishButton.addEventListener("click", () => {
     if (saved) recordsMessage.textContent = "완료한 맞춤 훈련을 연습 목록에 저장했습니다.";
     hideCompletedSettings();
     showStep(3);
-});
-
-completedSettingsButton.addEventListener("click", () => {
-    const isExpanded = completedSettingsButton.getAttribute("aria-expanded") === "true";
-    completedSettings.hidden = isExpanded;
-    completedSettingsButton.setAttribute("aria-expanded", String(!isExpanded));
-    completedSettingsButton.textContent = isExpanded ? "완료한 설정 확인하기" : "설정 내용 숨기기";
 });
 
 restartButton.addEventListener("click", () => {
