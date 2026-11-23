@@ -692,6 +692,7 @@ body.dark .training-flow .progress-item.is-active {
     font-weight: 700;
 }
 
+#training-save-error:empty {display: none;}
 .training-flow #training-title.has-error {border-color: #d32f2f;}
 .training-flow #duration-range {width: 100%; accent-color: #009708;}
 .training-flow input[type="checkbox"],
@@ -862,6 +863,10 @@ body.dark .training-flow .progress-item.is-active {
 .record-status-button {
     color: #245c3a;
     background-color: #e6f7e6;
+}
+
+.record-status-button:hover {
+    color: #ffffff;
 }
 
 .completed-settings:not([hidden]) + #restart-button {

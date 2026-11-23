@@ -237,6 +237,8 @@ const subscribeResetButton = document.querySelector("#subscribe-reset");
 const subscribeMessage = document.querySelector("#subscribeMessage");
 const nameCount = document.querySelector("#name-count");
 const hasSubmittedForm = { value: false };
+const subscribeDraftKey = "postureNewsletterDraft";
+const subscribeDraftMessage = "입력 내용은 현재 탭에 임시 보관됩니다.";
 
 const formFields = [
     { input: subscriberNameInput, error: document.querySelector("#name-error") },
@@ -306,6 +308,112 @@ function validateSubscribeForm() {
     return true;
 }
 
+function getSubscribeDraftValues() {
+    return {
+        name: subscriberNameInput.value,
+        email: emailInput.value,
+        interest: interestInput.value,
+        consultationRequested: consultationRequest.checked,
+        phone: phoneInput.value,
+        contactTime: contactTimeInput.value
+    };
+}
+
+function hasSubscribeDraftInput(draft) {
+    return Boolean(
+        draft.name
+        || draft.email
+        || draft.interest
+        || draft.consultationRequested
+        || draft.phone
+        || draft.contactTime
+    );
+}
+
+function saveSubscribeDraft() {
+    const draft = getSubscribeDraftValues();
+    if (!hasSubscribeDraftInput(draft)) return clearSubscribeDraft();
+
+    try {
+        sessionStorage.setItem(subscribeDraftKey, JSON.stringify(draft));
+        if (subscribeMessage.textContent === "필수 항목을 입력하고 관심 주제를 선택해 주세요.") {
+            subscribeMessage.textContent = subscribeDraftMessage;
+        }
+        return true;
+    } catch (error) {
+        subscribeMessage.className = "is-error";
+        subscribeMessage.textContent = "입력 내용을 이 탭에 임시 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.";
+        return false;
+    }
+}
+
+function clearSubscribeDraft() {
+    try {
+        sessionStorage.removeItem(subscribeDraftKey);
+        if (subscribeMessage.textContent === subscribeDraftMessage) {
+            subscribeMessage.className = "";
+            subscribeMessage.textContent = "필수 항목을 입력하고 관심 주제를 선택해 주세요.";
+        }
+        return true;
+    } catch (error) {
+        subscribeMessage.className = "is-error";
+        subscribeMessage.textContent = "임시 신청 내용을 삭제하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.";
+        return false;
+    }
+}
+
+function readSubscribeDraft() {
+    let rawDraft;
+    try {
+        rawDraft = sessionStorage.getItem(subscribeDraftKey);
+    } catch (error) {
+        subscribeMessage.className = "is-error";
+        subscribeMessage.textContent = "임시 신청 내용을 불러오지 못했습니다. 브라우저 저장 공간을 확인해 주세요.";
+        return null;
+    }
+    if (rawDraft === null) return null;
+
+    try {
+        const draft = JSON.parse(rawDraft);
+        const interestValues = Array.from(interestInput.options, (option) => option.value);
+        const contactTimeValues = Array.from(contactTimeInput.options, (option) => option.value);
+        if (!draft
+            || typeof draft.name !== "string" || draft.name.length > subscriberNameInput.maxLength
+            || typeof draft.email !== "string" || draft.email.length > 254
+            || !interestValues.includes(draft.interest)
+            || typeof draft.consultationRequested !== "boolean"
+            || typeof draft.phone !== "string" || draft.phone.length > 32
+            || !contactTimeValues.includes(draft.contactTime)) {
+            throw new Error("저장된 신청 내용의 형식이 올바르지 않습니다.");
+        }
+        return draft;
+    } catch (error) {
+        if (clearSubscribeDraft()) {
+            subscribeMessage.className = "is-error";
+            subscribeMessage.textContent = "임시 신청 내용이 올바르지 않아 복구하지 못했습니다.";
+        }
+        return null;
+    }
+}
+
+function restoreSubscribeDraft() {
+    const draft = readSubscribeDraft();
+    if (!draft) return;
+
+    subscriberNameInput.value = draft.name;
+    emailInput.value = draft.email;
+    interestInput.value = draft.interest;
+    consultationRequest.checked = draft.consultationRequested;
+    phoneInput.value = draft.phone;
+    contactTimeInput.value = draft.contactTime;
+    hasSubmittedForm.value = false;
+    updateNameCount();
+    updateConsultationFields();
+    formFields.forEach(updateFieldState);
+    subscribeMessage.className = "";
+    subscribeMessage.textContent = "새로고침 전 작성하던 신청 내용을 복구했습니다.";
+}
+
 subscriberNameInput.addEventListener("input", () => {
     updateNameCount();
     updateFieldState(formFields[0]);
@@ -315,6 +423,8 @@ formFields.slice(1).forEach((field) => {
     field.input.addEventListener("change", () => updateFieldState(field));
 });
 consultationRequest.addEventListener("change", updateConsultationFields);
+subscribeForm.addEventListener("input", saveSubscribeDraft);
+subscribeForm.addEventListener("change", saveSubscribeDraft);
 
 subscribeForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -342,8 +452,11 @@ subscribeForm.addEventListener("submit", (event) => {
             const savedSubmissions = JSON.parse(localStorage.getItem("postureNewsletterRequests") || "[]");
             savedSubmissions.push(submission);
             localStorage.setItem("postureNewsletterRequests", JSON.stringify(savedSubmissions));
-            subscribeMessage.className = "is-success";
-            subscribeMessage.textContent = `${submission.name}님, ${submission.email} 주소로 훈련 소식 신청이 완료되었습니다.`;
+            const draftCleared = clearSubscribeDraft();
+            subscribeMessage.className = draftCleared ? "is-success" : "is-error";
+            subscribeMessage.textContent = draftCleared
+                ? `${submission.name}님, ${submission.email} 주소로 훈련 소식 신청이 완료되었습니다.`
+                : `${submission.name}님, 신청은 완료했지만 임시 입력 내용을 삭제하지 못했습니다. 다시 작성하기를 눌러 정리해 주세요.`;
             subscribeButton.textContent = "신청 완료";
             subscribeResetButton.hidden = false;
         } catch (error) {
@@ -356,6 +469,7 @@ subscribeForm.addEventListener("submit", (event) => {
 });
 
 subscribeForm.addEventListener("reset", () => {
+    const draftCleared = clearSubscribeDraft();
     window.setTimeout(() => {
         hasSubmittedForm.value = false;
         formFields.forEach((field) => {
@@ -367,13 +481,17 @@ subscribeForm.addEventListener("reset", () => {
         phoneInput.required = false;
         contactTimeInput.required = false;
         updateNameCount();
-        subscribeMessage.className = "";
-        subscribeMessage.textContent = "필수 항목을 입력하고 관심 주제를 선택해 주세요.";
+        if (draftCleared) {
+            subscribeMessage.className = "";
+            subscribeMessage.textContent = "필수 항목을 입력하고 관심 주제를 선택해 주세요.";
+        }
         subscribeButton.disabled = false;
         subscribeButton.textContent = "훈련 소식 신청하기";
         subscribeResetButton.hidden = true;
     }, 0);
 });
+
+restoreSubscribeDraft();
 
 const themeButton = document.querySelector("#themeButton");
 const nicknameInput = document.querySelector("#nickname");
@@ -396,7 +514,10 @@ function handleNicknameInput() {
     nicknameCount.textContent = currentLength + " / " + maxLength;
 }
 
-nicknameInput.addEventListener("input", handleNicknameInput);
+nicknameInput.addEventListener("input", () => {
+    handleNicknameInput();
+    saveTrainingDraft();
+});
 
 function handleAgreeChange() {
     const agreed = agreeCheck.checked;
@@ -411,6 +532,7 @@ function handleAgreeChange() {
     } else {
         agreeMessage.classList.remove("is-ready");
     }
+    saveTrainingDraft();
 }
 
 agreeCheck.addEventListener("change", handleAgreeChange);
@@ -475,7 +597,14 @@ const completedSettings = document.querySelector("#completed-settings");
 const completedTitle = document.querySelector("#completed-title");
 const completedDuration = document.querySelector("#completed-duration");
 const completedFocus = document.querySelector("#completed-focus");
+const draftMessage = document.querySelector("#draft-message");
+const trainingSaveError = document.querySelector("#training-save-error");
 const durationValues = ["3", "5", "10"];
+const trainingDraftKey = "postureTrainingDraft";
+const focusValues = Array.from(trainingFocusOptions, (option) => option.value);
+const defaultFocus = "바른 앉은 자세";
+let activeStepIndex = 0;
+let restoringDraft = false;
 bindDisclosure(
     completedSettingsButton,
     completedSettings,
@@ -486,10 +615,11 @@ bindDisclosure(
 const formData = {
     title: "",
     duration: "5",
-    focus: "바른 앉은 자세"
+    focus: defaultFocus
 };
 
-function showStep(index) {
+function showStep(index, save = true) {
+    activeStepIndex = index;
     flowSteps.forEach((step, i) => { step.hidden = i !== index; });
     progressItems.forEach((item, i) => {
         const isCurrent = i === Math.min(index, progressItems.length - 1);
@@ -497,7 +627,129 @@ function showStep(index) {
         if (isCurrent) item.setAttribute("aria-current", "step");
         else item.removeAttribute("aria-current");
     });
+    if (save && index < 3) saveTrainingDraft();
     flowSteps[index].querySelector("h3").focus();
+}
+
+function updateDraftMessage(message, isError) {
+    draftMessage.textContent = message;
+    draftMessage.hidden = !message;
+    draftMessage.classList.toggle("is-error", Boolean(isError));
+}
+
+function saveTrainingDraft() {
+    if (restoringDraft || activeStepIndex > 2) return true;
+
+    const draft = getDraftValues();
+    if (!hasDraftInput(draft)) return clearTrainingDraft();
+
+    try {
+        sessionStorage.setItem(trainingDraftKey, JSON.stringify(draft));
+        if (draftMessage.textContent !== "작성 내용은 현재 탭에 임시 보관됩니다.") {
+            updateDraftMessage("작성 내용은 현재 탭에 임시 보관됩니다.", false);
+        }
+        return true;
+    } catch (error) {
+        updateDraftMessage("작성 내용을 이 탭에 임시 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.", true);
+        return false;
+    }
+}
+
+function getDraftValues() {
+    const selectedFocus = document.querySelector('input[name="training-focus"]:checked');
+    return {
+        step: activeStepIndex,
+        started: !trainingFlow.hidden,
+        title: titleInput.value,
+        duration: durationValues[Number(durationRange.value)],
+        focus: selectedFocus.value,
+        nickname: nicknameInput.value,
+        agreed: agreeCheck.checked
+    };
+}
+
+function hasDraftInput(draft) {
+    return Boolean(
+        draft.started
+        || draft.title
+        || draft.nickname
+        || draft.duration !== "5"
+        || draft.focus !== defaultFocus
+        || draft.agreed
+    );
+}
+
+function clearTrainingDraft() {
+    try {
+        sessionStorage.removeItem(trainingDraftKey);
+        updateDraftMessage("", false);
+        return true;
+    } catch (error) {
+        updateDraftMessage("임시 작성 내용을 삭제하지 못했습니다. 이 탭을 닫기 전에 다시 시도해 주세요.", true);
+        return false;
+    }
+}
+
+function readTrainingDraft() {
+    let rawDraft;
+    try {
+        rawDraft = sessionStorage.getItem(trainingDraftKey);
+    } catch (error) {
+        updateDraftMessage("이 탭의 임시 작성 내용을 불러오지 못했습니다. 브라우저 저장 공간을 확인해 주세요.", true);
+        return null;
+    }
+    if (rawDraft === null) return null;
+
+    try {
+        const draft = JSON.parse(rawDraft);
+        if (!draft
+            || !Number.isInteger(draft.step) || draft.step < 0 || draft.step > 2
+            || typeof draft.title !== "string"
+            || !durationValues.includes(draft.duration)
+            || !focusValues.includes(draft.focus)
+            || typeof draft.nickname !== "string" || draft.nickname.length > nicknameInput.maxLength
+            || typeof draft.agreed !== "boolean"
+            || (draft.started !== undefined && typeof draft.started !== "boolean")) {
+            throw new Error("저장된 훈련 설정의 형식이 올바르지 않습니다.");
+        }
+        return draft;
+    } catch (error) {
+        if (clearTrainingDraft()) {
+            updateDraftMessage("임시 작성 내용이 올바르지 않아 새 설정을 시작합니다.", true);
+        }
+        return null;
+    }
+}
+
+function restoreTrainingDraft() {
+    const draft = readTrainingDraft();
+    if (!draft) return;
+
+    const started = typeof draft.started === "boolean" ? draft.started : true;
+    restoringDraft = true;
+    titleInput.value = draft.title;
+    durationRange.value = String(durationValues.indexOf(draft.duration));
+    durationValue.value = `${draft.duration}분`;
+    trainingFocusOptions.forEach((option) => {
+        option.checked = option.value === draft.focus;
+    });
+    nicknameInput.value = draft.nickname;
+    handleNicknameInput();
+    agreeCheck.checked = draft.agreed;
+    handleAgreeChange();
+    formData.title = draft.title.trim();
+    formData.duration = draft.duration;
+    formData.focus = draft.focus;
+    trainingFlow.hidden = !started;
+
+    if (started && draft.step === 2) {
+        summaryTitle.textContent = formData.title;
+        summaryDuration.textContent = `${formData.duration}분`;
+        summaryFocus.textContent = formData.focus;
+    }
+    if (started) showStep(draft.step, false);
+    restoringDraft = false;
+    updateDraftMessage("새로고침 전 작성하던 내용을 복구했습니다. 이 임시 내용은 현재 탭에서만 유지됩니다.", false);
 }
 
 const recordingDialog = document.querySelector("#recording-dialog");
@@ -534,6 +786,7 @@ recordingConfirm.addEventListener("click", () => {
     recordingDialog.close();
     trainingFlow.hidden = false;
     showStep(0);
+    updateDraftMessage("작성 내용은 현재 탭에 임시 보관됩니다.", false);
     trainingFlow.scrollIntoView({behavior: "smooth"});
     titleInput.focus();
 });
@@ -557,8 +810,14 @@ titleNext.addEventListener("click", () => {
     showStep(1);
 });
 
+titleInput.addEventListener("input", saveTrainingDraft);
+
 durationRange.addEventListener("input", () => {
     durationValue.value = durationValues[durationRange.value] + "분";
+    saveTrainingDraft();
+});
+trainingFocusOptions.forEach((option) => {
+    option.addEventListener("change", saveTrainingDraft);
 });
 
 optionPrev.addEventListener("click", () => showStep(0));
@@ -582,6 +841,7 @@ finishButton.addEventListener("click", () => {
     completedTitle.textContent = formData.title;
     completedDuration.textContent = formData.duration + "분";
     completedFocus.textContent = formData.focus;
+    const previousItems = exerciseItems;
     exerciseItems = [
         ...exerciseItems,
         {
@@ -601,15 +861,27 @@ finishButton.addEventListener("click", () => {
     });
     const saved = persistExerciseItems();
     renderExerciseItems();
-    if (saved) recordsMessage.textContent = "완료한 맞춤 훈련을 연습 목록에 저장했습니다.";
+    if (!saved) {
+        exerciseItems = previousItems;
+        renderExerciseItems();
+        trainingSaveError.textContent = "훈련 설정을 저장하지 못했습니다. 임시 내용은 유지되었으니 저장 공간을 확인한 뒤 다시 시도해 주세요.";
+        return;
+    }
+    recordsMessage.textContent = "완료한 맞춤 훈련을 연습 목록에 저장했습니다.";
+    trainingSaveError.textContent = "";
+    const draftRemoved = clearTrainingDraft();
+    if (!draftRemoved) {
+        trainingSaveError.textContent = "훈련 설정은 저장했지만 임시 내용 삭제에 실패했습니다. 다시 설정하기를 눌러 삭제를 재시도해 주세요.";
+    }
     hideCompletedSettings();
     showStep(3);
 });
 
 restartButton.addEventListener("click", () => {
+    const draftCleared = clearTrainingDraft();
     formData.title = "";
     formData.duration = "5";
-    formData.focus = "바른 앉은 자세";
+    formData.focus = defaultFocus;
     titleInput.value = "";
     titleError.textContent = "";
     titleInput.classList.remove("has-error");
@@ -621,6 +893,14 @@ restartButton.addEventListener("click", () => {
     summaryTitle.textContent = "";
     summaryDuration.textContent = "";
     summaryFocus.textContent = "";
+    trainingSaveError.textContent = "";
     hideCompletedSettings();
+    restoringDraft = true;
     showStep(0);
+    restoringDraft = false;
+    if (draftCleared) {
+        updateDraftMessage("새 설정을 시작합니다. 작성 내용은 현재 탭에 임시 보관됩니다.", false);
+    }
 });
+
+restoreTrainingDraft();
